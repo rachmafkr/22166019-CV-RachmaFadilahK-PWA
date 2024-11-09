@@ -47,23 +47,29 @@ window.addEventListener('beforeinstallprompt', (e) => {
     });
 });
 
-// Event listener untuk tombol izinkan notifikasi
-document.getElementById('allowNotification').addEventListener('click', function() {
-    // Minta izin notifikasi
-    if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                console.log("Izin notifikasi diberikan.");
-                // Tampilkan notifikasi setelah izin diberikan
+// Periksa apakah elemen dengan ID 'allowNotification' ada sebelum menambahkan event listener
+const allowNotificationButton = document.getElementById('allowNotification');
+if (allowNotificationButton) {
+    allowNotificationButton.addEventListener('click', function() {
+        // Minta izin notifikasi
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log("Izin notifikasi diberikan.");
+                    // Tampilkan notifikasi setelah izin diberikan
+                    showNotification();
+                } else {
+                    console.log("Izin notifikasi ditolak.");
+                }
+            });
+        } else {
+            console.log("Izin notifikasi sudah ada: " + Notification.permission);
+            if (Notification.permission === 'granted') {
                 showNotification();
-            } else {
-                console.log("Izin notifikasi ditolak.");
             }
-        });
-    } else {
-        console.log("Izin notifikasi sudah ada: " + Notification.permission);
-    }
-});
+        }
+    });
+}
 
 // Fungsi untuk menampilkan notifikasi
 function showNotification() {
@@ -75,5 +81,3 @@ function showNotification() {
         new Notification("Notifikasi Teluk Randai", options);
     }
 }
-// Menambahkan event listener untuk tombol "Izinkan Notifikasi"
-document.getElementById("allowNotification").addEventListener("click", showNotification);
