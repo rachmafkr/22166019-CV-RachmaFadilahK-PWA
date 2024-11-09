@@ -12,14 +12,12 @@ if ('serviceWorker' in navigator) {
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Mencegah prompt default
-    e.preventDefault();
-    // Menyimpan event untuk digunakan nanti
-    deferredPrompt = e;
+    e.preventDefault(); // Mencegah prompt default dari browser
+    deferredPrompt = e; // Simpan event prompt untuk digunakan nanti
 
     // Buat tombol pemasangan aplikasi
     const installButton = document.createElement('button');
-    installButton.textContent = 'Install aplikasi ini';
+    installButton.textContent = 'Install Aplikasi';
     installButton.style.position = 'fixed';
     installButton.style.bottom = '20px';
     installButton.style.right = '20px';
@@ -33,17 +31,49 @@ window.addEventListener('beforeinstallprompt', (e) => {
     // Tangani klik pada tombol install
     installButton.addEventListener('click', () => {
         // Tampilkan prompt instalasi
-        deferredPrompt.prompt();
-        // Tangani pilihan pengguna
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('Pengguna setuju untuk menginstal aplikasi.');
-            } else {
-                console.log('Pengguna menolak instalasi aplikasi.');
-            }
-            // Reset deferredPrompt dan hapus tombol setelah dipilih
-            deferredPrompt = null;
-            installButton.remove();
-        });
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('Pengguna setuju untuk menginstal aplikasi.');
+                } else {
+                    console.log('Pengguna menolak instalasi aplikasi.');
+                }
+                // Reset dan hapus tombol install setelah dipilih
+                deferredPrompt = null;
+                installButton.remove();
+            });
+        }
     });
 });
+
+// Event listener untuk tombol izinkan notifikasi
+document.getElementById('allowNotification').addEventListener('click', function() {
+    // Minta izin notifikasi
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log("Izin notifikasi diberikan.");
+                // Tampilkan notifikasi setelah izin diberikan
+                showNotification();
+            } else {
+                console.log("Izin notifikasi ditolak.");
+            }
+        });
+    } else {
+        console.log("Izin notifikasi sudah ada: " + Notification.permission);
+    }
+});
+
+// Fungsi untuk menampilkan notifikasi
+function showNotification() {
+    const options = {
+        body: "Selamat datang di Teluk Randai! Jelajahi portofolio saya. Terima kasih sudah berkunjung!",
+        icon: "images/logo.png"
+    };
+    if (Notification.permission === "granted") {
+        new Notification("Notifikasi Teluk Randai", options);
+    }
+}
+// Menambahkan event listener untuk tombol "Izinkan Notifikasi"
+document.getElementById("allowNotification").addEventListener("click", showNotification);
