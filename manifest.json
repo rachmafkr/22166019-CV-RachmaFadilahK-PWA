@@ -5,17 +5,13 @@
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",
+    "orientation": "portrait",
+    "description": "Teluk Randai adalah blog pribadi yang menampilkan Curriculum Vitae, pengalaman organisasi, karya penulis, serta kutipan-kutipan inspiratif dari berbagai buku yang pernah dibaca. Blog ini dibuat untuk berbagi perjalanan dan inspirasi hidup penulis.",
     "icons": [
-      {
-        "src": "images/logo.png",
-        "sizes": "500x500",
-        "type": "image/png"
-      },
       {
         "src": "images/logo.png",
         "sizes": "500x500",
         "type": "image/png"
       }
     ]
-  }
-  
+}
