@@ -1,5 +1,5 @@
 // Nama cache, tambahkan versi baru setiap kali ada perubahan
-const cacheName = 'teluk-randai-cache-v4';
+const cacheName = 'teluk-randai-cache-v5';
 
 // Daftar file statis yang akan di-cache
 const assetsToCache = [
@@ -13,7 +13,6 @@ const assetsToCache = [
   '/post.html',
   '/manifest.json',
   '/notification.js',
-  '/sw.js',
   '/css/style.css',
   '/images/thumbs/1.jpg',
   '/images/thumbs/2.jpg',
@@ -33,6 +32,7 @@ const assetsToCache = [
   '/js/notification.js',
 ];
 
+// Install Service Worker dan caching aset
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(cacheName)
@@ -44,7 +44,7 @@ self.addEventListener('install', event => {
         console.error('[Service Worker] Caching failed:', err);
       })
   );
-  self.skipWaiting(); // Aktifkan service worker baru langsung
+  self.skipWaiting();
 });
 
 // Activate Service Worker dan hapus cache lama
@@ -61,36 +61,42 @@ self.addEventListener('activate', event => {
       );
     })
   );
-  self.clients.claim(); // Pastikan service worker langsung mengontrol halaman
+  self.clients.claim();
 });
 
-// Fetch event handler dengan strategi berbeda untuk HTML dan aset statis
+// Fetch event handler dengan pengecekan skema URL dan respons valid
 self.addEventListener('fetch', event => {
+  const requestURL = event.request.url;
+
   if (event.request.mode === 'navigate') {
-    // Untuk file HTML, ambil dari jaringan dengan fallback ke cache
+    // Fetch untuk halaman HTML dengan fallback ke cache
     event.respondWith(
       fetch(event.request)
         .then(networkResponse => {
           return caches.open(cacheName).then(cache => {
-            if (networkResponse.ok && (event.request.url.startsWith('http://') || event.request.url.startsWith('https://'))) {
+            // Simpan respons di cache jika sukses dan skema URL valid
+            if (networkResponse.ok && (requestURL.startsWith('http://') || requestURL.startsWith('https://'))) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
           });
         })
-        .catch(() => caches.match(event.request)) // Fallback ke cache jika jaringan gagal
+        .catch(() => caches.match(event.request) || caches.match('/index.html')) 
     );
   } else {
-    // Untuk aset statis, gunakan cache-first
+    // Fetch untuk aset statis dengan cache-first
     event.respondWith(
       caches.match(event.request).then(response => {
         return response || fetch(event.request).then(networkResponse => {
           return caches.open(cacheName).then(cache => {
-            if (networkResponse.ok && (event.request.url.startsWith('http://') || event.request.url.startsWith('https://'))) {
+            // Simpan respons di cache jika sukses dan skema URL valid
+            if (networkResponse.ok && (requestURL.startsWith('http://') || requestURL.startsWith('https://'))) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
           });
+        }).catch(err => {
+          console.error('[Service Worker] Fetch failed:', err);
         });
       })
     );
