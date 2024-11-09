@@ -1,4 +1,3 @@
-// Nama cache, tambahkan versi baru setiap kali ada perubahan
 const cacheName = 'teluk-randai-cache-v5';
 
 // Daftar file statis yang akan di-cache
@@ -38,10 +37,14 @@ self.addEventListener('install', event => {
     caches.open(cacheName)
       .then(cache => {
         console.log('[Service Worker] Caching static assets');
-        return cache.addAll(assetsToCache);
+        return Promise.allSettled(assetsToCache.map(asset =>
+          cache.add(asset).catch(err => {
+            console.warn('[Service Worker] Failed to cache ${asset}:', err);
+          })
+        ));
       })
       .catch(err => {
-        console.error('[Service Worker] Caching failed:', err);
+        console.error('[Service Worker] Opening cache failed:', err);
       })
   );
   self.skipWaiting();
@@ -66,7 +69,7 @@ self.addEventListener('activate', event => {
 
 // Fetch event handler dengan pengecekan skema URL dan respons valid
 self.addEventListener('fetch', event => {
-  const requestURL = event.request.url;
+  const requestURL = new URL(event.request.url);
 
   if (event.request.mode === 'navigate') {
     // Fetch untuk halaman HTML dengan fallback ke cache
@@ -75,13 +78,13 @@ self.addEventListener('fetch', event => {
         .then(networkResponse => {
           return caches.open(cacheName).then(cache => {
             // Simpan respons di cache jika sukses dan skema URL valid
-            if (networkResponse.ok && (requestURL.startsWith('http://') || requestURL.startsWith('https://'))) {
+            if (networkResponse.ok && (requestURL.protocol === 'http:' || requestURL.protocol === 'https:')) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
           });
         })
-        .catch(() => caches.match(event.request) || caches.match('/index.html')) 
+        .catch(() => caches.match(event.request) || caches.match('/index.html'))
     );
   } else {
     // Fetch untuk aset statis dengan cache-first
@@ -90,13 +93,15 @@ self.addEventListener('fetch', event => {
         return response || fetch(event.request).then(networkResponse => {
           return caches.open(cacheName).then(cache => {
             // Simpan respons di cache jika sukses dan skema URL valid
-            if (networkResponse.ok && (requestURL.startsWith('http://') || requestURL.startsWith('https://'))) {
+            if (networkResponse.ok && (requestURL.protocol === 'http:' || requestURL.protocol === 'https:')) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
           });
         }).catch(err => {
           console.error('[Service Worker] Fetch failed:', err);
+          // Tambahkan fallback respons jika fetch gagal
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
         });
       })
     );
