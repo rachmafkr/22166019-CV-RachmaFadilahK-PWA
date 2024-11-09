@@ -87,3 +87,39 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error("Kesalahan saat membuka database IndexedDB: " + event.target.error);
     };
 });
+
+// Fungsi untuk menyimpan email ke IndexedDB
+function saveAdditionalEmail(email) {
+    var request = indexedDB.open("ContactDatabase", 1);
+
+    request.onsuccess = function(event) {
+        var db = event.target.result;
+
+        var transaction = db.transaction(["ContactStore"], "readwrite");
+        var objectStore = transaction.objectStore("ContactStore");
+
+        var emailData = {
+            additionalEmail: email // Menyimpan email tambahan di dalam store yang sama
+        };
+
+        var addRequest = objectStore.add(emailData);
+        addRequest.onsuccess = function() {
+            console.log("Email tambahan berhasil disimpan!");
+        };
+        addRequest.onerror = function(event) {
+            console.error("Kesalahan saat menambahkan email tambahan: " + event.target.error);
+        };
+    };
+
+    request.onerror = function(event) {
+        console.error("Kesalahan saat membuka database IndexedDB: " + event.target.error);
+    };
+}
+
+// Menangani submit form dan menyimpan email tambahan
+document.querySelector('.form-group').addEventListener('submit', function(event) {
+    event.preventDefault(); // Mencegah reload halaman
+    var email = document.querySelector('#semail').value;
+    saveAdditionalEmail(email);
+    document.querySelector('#semail').value = ''; // Reset input setelah submit
+});
