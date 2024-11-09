@@ -27,60 +27,59 @@ document.addEventListener("DOMContentLoaded", function() {
     // Event ketika database berhasil dibuka
     request.onsuccess = function(event) {
         var db = event.target.result;
-        
+
         const komentarForm = document.getElementById("komentarForm");
-        if (!komentarForm) {
-            console.error("Form komentar tidak ditemukan!");
-            return;
-        }
+        if (komentarForm) {
+            komentarForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                var exampleInputEmail = document.getElementById("exampleInputEmail1")?.value;
+                var exampleMessage = document.getElementById("exampleMessage")?.value;
 
-        komentarForm.addEventListener("submit", function(e) {
-            e.preventDefault();
-            var exampleInputEmail = document.getElementById("exampleInputEmail1")?.value;
-            var exampleMessage = document.getElementById("exampleMessage")?.value;
-
-            if (!exampleInputEmail || !exampleMessage) {
-                console.error("Email atau pesan tidak boleh kosong.");
-                return;
-            }
-
-            if (!db) {
-                console.error("Database tidak ditemukan!");
-                return;
-            }
-
-            var transaction = db.transaction(["ContactStore"], "readwrite");
-
-            transaction.oncomplete = function() {
-                console.log("Komentar telah disimpan.");
-                komentarForm.reset();
-
-                // Menampilkan notifikasi jika pesan berhasil terkirim
-                if (Notification.permission === "granted") {
-                    new Notification("Pesan Anda berhasil dikirim!");
-                } else {
-                    console.warn("Notifikasi tidak muncul karena izin tidak diberikan.");
+                if (!exampleInputEmail || !exampleMessage) {
+                    console.error("Email atau pesan tidak boleh kosong.");
+                    return;
                 }
-            };
 
-            transaction.onerror = function(event) {
-                console.error("Kesalahan saat menyimpan komentar: " + event.target.error);
-            };
+                if (!db) {
+                    console.error("Database tidak ditemukan!");
+                    return;
+                }
 
-            var objectStore = transaction.objectStore("ContactStore");
-            var komentarData = {
-                exampleInputEmail: exampleInputEmail,
-                exampleMessage: exampleMessage,
-            };
+                var transaction = db.transaction(["ContactStore"], "readwrite");
 
-            var addRequest = objectStore.add(komentarData);
-            addRequest.onsuccess = function() {
-                console.log("Data berhasil ditambahkan!");
-            };
-            addRequest.onerror = function(event) {
-                console.error("Kesalahan saat menambahkan data: " + event.target.error);
-            };
-        });
+                transaction.oncomplete = function() {
+                    console.log("Komentar telah disimpan.");
+                    komentarForm.reset();
+
+                    // Menampilkan notifikasi jika pesan berhasil terkirim
+                    if (Notification.permission === "granted") {
+                        new Notification("Pesan Anda berhasil dikirim!");
+                    } else {
+                        console.warn("Notifikasi tidak muncul karena izin tidak diberikan.");
+                    }
+                };
+
+                transaction.onerror = function(event) {
+                    console.error("Kesalahan saat menyimpan komentar: " + event.target.error);
+                };
+
+                var objectStore = transaction.objectStore("ContactStore");
+                var komentarData = {
+                    exampleInputEmail: exampleInputEmail,
+                    exampleMessage: exampleMessage,
+                };
+
+                var addRequest = objectStore.add(komentarData);
+                addRequest.onsuccess = function() {
+                    console.log("Data berhasil ditambahkan!");
+                };
+                addRequest.onerror = function(event) {
+                    console.error("Kesalahan saat menambahkan data: " + event.target.error);
+                };
+            });
+        } else {
+            console.error("Form komentar tidak ditemukan!");
+        }
     };
 
     request.onerror = function(event) {
@@ -117,9 +116,20 @@ function saveAdditionalEmail(email) {
 }
 
 // Menangani submit form dan menyimpan email tambahan
-document.querySelector('.form-group').addEventListener('submit', function(event) {
-    event.preventDefault(); // Mencegah reload halaman
-    var email = document.querySelector('#semail').value;
-    saveAdditionalEmail(email);
-    document.querySelector('#semail').value = ''; // Reset input setelah submit
+document.addEventListener("DOMContentLoaded", function() {
+    const formGroup = document.querySelector('.form-group');
+    if (formGroup) {
+        formGroup.addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah reload halaman
+            var email = document.querySelector('#semail')?.value;
+            if (email) {
+                saveAdditionalEmail(email);
+                document.querySelector('#semail').value = ''; // Reset input setelah submit
+            } else {
+                console.error("Email tidak boleh kosong.");
+            }
+        });
+    } else {
+        console.error("Elemen form-group tidak ditemukan!");
+    }
 });
